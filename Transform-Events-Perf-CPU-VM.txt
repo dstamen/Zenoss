@@ -1,0 +1,10 @@
+# Zenoss Transforms for VM CPU Thresholds
+# @davidstamen
+# http://davidstamen.com
+
+import re
+if regex and device and device.getDeviceClassPath().startswith("/vSphere"):
+    wincpu = re.search("current value ([\d\.]+)", evt.summary)
+    if wincpu:
+        currentcpu = float(wincpu.group(1))/100
+        evt.summary = "High VM CPU Utilization: Currently %3.2f%%" % (currentcpu)

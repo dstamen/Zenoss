@@ -1,0 +1,11 @@
+# Zenoss Transforms for VM Memory Thresholds
+# @davidstamen
+# http://davidstamen.com
+
+import time, re, logging
+regex = re.search('threshold of .*(Memory).* (exceeded|restored|not met): current value ([\d\.]+)', evt.message, re.I)
+if regex and device and device.getDeviceClassPath().startswith("/vSphere"):
+    vmmem= re.search("current value ([\d\.]+)", evt.summary)
+    if vmmem:
+        currentmem = float(vmmem.group(1))/100
+        evt.summary = "High VM Memory Utilization: Currently %3.2f%%" % (currentmem)

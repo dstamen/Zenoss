@@ -1,0 +1,55 @@
+# Zenoss Transforms for PortChannel Thresholds
+# @davidstamen
+# http://davidstamen.com
+
+#SPEED10Mb = '100000000'
+#SPEED100Mb = '100000000'
+#SPEED1Gb = '1000000000'
+#SPEED10Gb = '10000000000'
+
+import re
+fs_id = device.prepId(evt.component)
+for f in device.os.interfaces():
+    if f.id != fs_id: continue
+
+    regex = re.search('threshold of .*(PortChannel).* (exceeded|restored|not met): current value ([\d\.]+)', evt.message, re.I)
+    if regex and device and device.getDeviceClassPath().startswith("/Network/Cisco"):
+        portchannel= re.search("current value ([\d\.]+)", evt.summary)
+        if portchannel:
+            currentportchannel = float(portchannel.group(1)) * 8
+            if f.speed == 0: continue
+            p = (currentEthernetInterface / f.speed) * 100
+            #p2 = (currentportchannel/4000000000) * 100
+            evtKey = evt.eventKey
+
+            if "ifInOctets_ifInOctets|PortChannel" in evtKey:
+               evtNewKey = "Input"
+            elif "ifHCInOctets_ifHCInOctets|PortChannel" in evtKey:
+               evtNewKey = "Input"
+            elif "ifOutOctets_ifOutOctets|PortChannel" in evtKey:
+                evtNewKey = "Output"
+            elif "ifHCOutOctets_ifHCOutOctets|PortChannel" in evtKey:
+                evtNewKey = "Output"
+            else:
+                evtNewKey = "Unknown"
+
+            # Check the speed to determine the appropriate conversion
+            # Gbps utilization
+            if currentportchannel > 1000000000:
+                Usage = currentportchannel / 1000000000
+                evt.summary = "High Port Channel " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f Gbps)" % (p, Usage)
+
+            # Mbps utilization
+            elif currentportchannel > 1000000:
+                Usage = currentportchannel / 1000000
+                evt.summary = "High Port Channel " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f Mbps)" % (p, Usage)
+
+            # Kbps utilization
+            elif currentportchannel > 1000:
+                Usage = currentportchannel / 1000
+                evt.summary = "High Port Channel " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f Kbps)" % (p, Usage)
+
+            # bps  utilization
+            elif currentportchannel < 1000:
+                Usage = currentportchannel
+                evt.summary = "High Port Channel " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f bps)" % (p, Usage)

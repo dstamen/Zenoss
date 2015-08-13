@@ -1,0 +1,44 @@
+# Zenoss Transforms for vSphere pNIC Thresholds
+# @davidstamen
+# http://davidstamen.com
+
+#SPEED10Mb = '100000000'
+#SPEED100Mb = '100000000'
+#SPEED1Gb = '1000000000'
+#SPEED10Gb = '10000000000'
+import re
+regex = re.search('threshold of .*(pNIC).* (exceeded|restored|not met): current value ([\d\.]+)', evt.message, re.I)
+if regex and device and device.getDeviceClassPath().startswith("/vSphere"):
+    pNIC= re.search("current value ([\d\.]+)", evt.summary)
+    if pNIC:
+        currentpnic = float(pNIC.group(1)) * 8
+        p = (currentpNIC/100000000) * 100
+        evtKey = evt.eventKey
+
+        if "nicRx_nicRx|pNIC" in evtKey:
+            evtNewKey = "Input"
+        elif "nicTx_nicTx|pNIC" in evtKey:
+            evtNewKey = "Output"
+        else:
+            evtNewKey = "Unknown"
+
+        # Check the speed to determine the appropriate conversion
+        # Gbps utilization
+        if currentpnic > 1000000000:
+            Usage = currentpnic / 1000000000
+            evt.summary = "High pNIC " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f Gbps)" % (p, Usage)
+
+        # Mbps utilization
+        elif currentpnic > 1000000:
+            Usage = currentpnic / 1000000
+            evt.summary = "High pNIC " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f Mbps)" % (p, Usage)
+
+        # Kbps utilization
+        elif currentpnic > 1000:
+            Usage = currentpnic / 1000
+            evt.summary = "High pNIC " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f Kbps)" % (p, Usage)
+
+        # bps  utilization
+        elif currentpnic < 1000:
+            Usage = currentpnic
+            evt.summary = "High pNIC " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f bps)" % (p, Usage)

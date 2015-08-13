@@ -1,0 +1,14 @@
+# Zenoss Transforms for Memory Thresholds
+# @davidstamen
+# http://davidstamen.com
+
+import time, re, logging
+regex = re.search('threshold of .*(Memory).* (exceeded|restored|not met): current value ([\d\.]+)', evt.message, re.I)
+if regex and device and device.getDeviceClassPath().startswith("/Network/BIG-IP"):
+    lbmem= re.search("current value ([\d\.]+)", evt.summary)
+    if lbmem:
+        currentlbmem = float(lbmem.group(1))/1024000000
+        evt.summary = "High Memory Utilization: Currently %3.2f%%" % (currentlbmem)
+
+#F5 Event
+#if evt.summary.startswith("threshold of free host memory exceeded: current value"): evt.severity = 2

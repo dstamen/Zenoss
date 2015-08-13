@@ -1,0 +1,21 @@
+# Zenoss Transforms for CPU Thresholds
+# @davidstamen
+# http://davidstamen.com
+
+# Converts Linux and Windows CPU to a percentage. This is assuming ssCpuIdle is being used for the Linux threshold
+import re
+regex = re.search('threshold of .*(CPU).* (exceeded|restored|not met): current value ([\d\.]+)', evt.message, re.I)
+if regex and device and device.getDeviceClassPath().startswith("/Server/Linux"):
+    lincpu = re.search("current value ([\d\.]+)", evt.summary)
+    if lincpu:
+        currentcpu = 100 - float(lincpu.group(1))
+        evt.summary = "High CPU Utilization: Currently %3.2f%%" % (currentcpu)
+
+if regex and device and device.getDeviceClassPath().startswith("/Server/Windows"):
+    wincpu = re.search("current value ([\d\.]+)", evt.summary)
+    if wincpu:
+        currentcpu = float(wincpu.group(1))
+        evt.summary = "High CPU Utilization: Currently %3.2f%%" % (currentcpu)
+
+#F5 Transform
+if evt.summary.startswith("threshold of overheat exceeded: current value"): evt.severity = 2

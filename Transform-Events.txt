@@ -1,0 +1,5 @@
+# Zenoss Transforms for Event Thresholds
+# @davidstamen
+# http://davidstamen.com
+
+if "Error processing transform/mapping" in evt.summary: evt.severity = 3

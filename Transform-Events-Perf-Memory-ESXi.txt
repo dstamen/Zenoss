@@ -1,0 +1,11 @@
+# Zenoss Transforms for ESXi Memory Thresholds
+# @davidstamen
+# http://davidstamen.com
+
+import time, re, logging
+regex = re.search('threshold of .*(Memory).* (exceeded|restored|not met): current value ([\d\.]+)', evt.message, re.I)
+if regex and device and device.getDeviceClassPath().startswith("/vSphere"):
+    hostmem= re.search("current value ([\d\.]+)", evt.summary)
+    if hostmem:
+        currentmem = float(hostmem.group(1))/1024000000
+        evt.summary = "High ESXi Host Memory Utilization: Currently %3.2f%%" % (currentmem)

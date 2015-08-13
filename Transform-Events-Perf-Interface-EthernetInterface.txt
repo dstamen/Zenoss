@@ -1,0 +1,53 @@
+# Zenoss Transforms for Ethernet Interface Thresholds
+# @davidstamen
+# http://davidstamen.com
+
+#SPEED10Mb = '100000000'
+#SPEED100Mb = '100000000'
+#SPEED1Gb = '1000000000'
+#SPEED10Gb = '10000000000'
+
+import re
+fs_id = device.prepId(evt.component)
+for f in device.os.interfaces():
+    if f.id != fs_id: continue
+
+    regex = re.search('threshold of .*(EthernetInterface).* (exceeded|restored|not met): current value ([\d\.]+)', evt.message, re.I)
+    if regex and device and device.getDeviceClassPath().startswith("/Network/Cisco"):
+        EthernetInterface= re.search("current value ([\d\.]+)", evt.summary)
+        if EthernetInterface:
+            currentEthernetInterface = float(EthernetInterface.group(1)) * 8
+            evtKey = evt.eventKey
+            if f.speed == 0: continue
+            p = (currentEthernetInterface / f.speed) * 100
+            if "ifInOctets_ifInOctets|EthernetInterface" in evtKey:
+               evtNewKey = "Input"
+            elif "ifHCInOctets_ifHCInOctets|EthernetInterface" in evtKey:
+               evtNewKey = "Input"
+            elif "ifOutOctets_ifOutOctets|EthernetInterface" in evtKey:
+                evtNewKey = "Output"
+            elif "ifHCOutOctets_ifHCOutOctets|EthernetInterface" in evtKey:
+                evtNewKey = "Output"
+            else:
+                evtNewKey = "Unknown"
+
+            # Check the speed to determine the appropriate conversion
+            # Gbps utilization
+            if currentEthernetInterface > 1000000000:
+                Usage = currentEthernetInterface / 1000000000
+                evt.summary = "High Ethernet Interface " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f Gbps)" % (p, Usage)
+
+            # Mbps utilization
+            elif currentEthernetInterface > 1000000:
+                Usage = currentEthernetInterface / 1000000
+                evt.summary = "High Ethernet Interface " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f Mbps)" % (p, Usage)
+
+            # Kbps utilization
+            elif currentEthernetInterface > 1000:
+                Usage = currentEthernetInterface / 1000
+                evt.summary = "High Ethernet Interface " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f Kbps)" % (p, Usage)
+
+            # bps  utilization
+            elif currentEthernetInterface < 1000:
+                Usage = currentEthernetInterface
+                evt.summary = "High Ethernet Interface " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f bps)" % (p, Usage)

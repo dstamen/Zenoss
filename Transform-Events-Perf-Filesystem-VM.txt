@@ -1,0 +1,17 @@
+# Zenoss Transforms for VM Filesystem Thresholds
+# @davidstamen
+# http://davidstamen.com
+
+import re
+
+regex = re.search('threshold of .*(Disk).* (exceeded|restored|not met): current value ([\d\.]+)', evt.message, re.I)
+if regex and device and device.getDeviceClassPath().startswith("/vSphere"):
+    vmdisk= re.search("current value ([\d\.]+)", evt.summary)
+    if vmdisk:
+        currentvdisklatency = float(vmdisk.group(1))
+        evtKey = evt.eventKey
+        if evtKey == "datastoreReadLatency_datastoreReadLatency|Disk Latency":
+            evtNewKey = "Read"
+        elif evtKey == "datastoreWriteLatency_datastoreWriteLatency|Disk Latency":
+                evtNewKey = "Write"
+        evt.summary = "High VM Disk " + evtNewKey+ " Latency: Currently %3.2f ms" % (currentvdisklatency)
