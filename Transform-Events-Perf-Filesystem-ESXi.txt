@@ -1,0 +1,13 @@
+# Zenoss Transforms for Filesystem Thresholds
+# @davidstamen
+# http://davidstamen.com
+
+import re
+
+regex = re.search('threshold of .*(DatastoreUsage).* (exceeded|restored|not met): current value ([\d\.]+)', evt.message, re.I)
+if regex and device and device.getDeviceClassPath().startswith("/vSphere"):
+    usage = re.search("current value ([\d\.]+)", evt.summary)
+    if usage:
+        currentusage = float(usage.group(1))
+        evtKey = evt.eventKey
+        evt.summary = "High Datastore Usage: Currently %3.0f%%" % (currentusage)
