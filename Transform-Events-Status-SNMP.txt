@@ -1,0 +1,4 @@
+if "SNMP agent down - no response received" in evt.summary: evt.severity = 2
+if "No values returned for configured oids" in evt.summary: evt.severity = 2
+if "Failed to collect some OIDs" in evt.summary: evt.severity = 2
+if "Unable to read processes on device" in evt.summary: evt.severity = 3
