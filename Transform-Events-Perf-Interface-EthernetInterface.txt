@@ -36,18 +36,115 @@ for f in device.os.interfaces():
             if currentEthernetInterface > 1000000000:
                 Usage = currentEthernetInterface / 1000000000
                 evt.summary = "High Ethernet Interface " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f Gbps)" % (p, Usage)
+                evt.message = evt.summary
 
             # Mbps utilization
             elif currentEthernetInterface > 1000000:
                 Usage = currentEthernetInterface / 1000000
                 evt.summary = "High Ethernet Interface " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f Mbps)" % (p, Usage)
+                evt.message = evt.summary
 
             # Kbps utilization
             elif currentEthernetInterface > 1000:
                 Usage = currentEthernetInterface / 1000
                 evt.summary = "High Ethernet Interface " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f Kbps)" % (p, Usage)
+                evt.message = evt.summary
 
             # bps  utilization
             elif currentEthernetInterface < 1000:
                 Usage = currentEthernetInterface
                 evt.summary = "High Ethernet Interface " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f bps)" % (p, Usage)
+                evt.message = evt.summary
+fs_id = device.prepId(evt.component)
+for f in device.os.interfaces():
+    if f.id != fs_id: continue
+
+    regex = re.search('threshold of .*(EthernetInterface).* (exceeded|restored|not met): current value ([\d\.]+)', evt.message, re.I)
+    if regex and device and device.getDeviceClassPath().startswith("/Server/Linux"):
+        EthernetInterface= re.search("current value ([\d\.]+)", evt.summary)
+        if EthernetInterface:
+            currentEthernetInterface = float(EthernetInterface.group(1)) * 8
+            evtKey = evt.eventKey
+            if f.speed == 0: continue
+            p = (currentEthernetInterface / f.speed) * 100
+            if "ifInOctets_ifInOctets|high utilization" in evtKey:
+               evtNewKey = "Input"
+            elif "ifHCInOctets_ifHCInOctets|high utilization" in evtKey:
+               evtNewKey = "Input"
+            elif "ifOutOctets_ifOutOctets|high utilization" in evtKey:
+                evtNewKey = "Output"
+            elif "ifHCOutOctets_ifHCOutOctets|high utilization" in evtKey:
+                evtNewKey = "Output"
+            else:
+                evtNewKey = "Unknown"
+            # Check the speed to determine the appropriate conversion
+            # Gbps utilization
+            if currentEthernetInterface > 1000000000:
+                Usage = currentEthernetInterface / 1000000000
+                evt.summary = "High Ethernet Interface " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f Gbps)" % (p, Usage)
+                evt.message = evt.summary
+
+            # Mbps utilization
+            elif currentEthernetInterface > 1000000:
+                Usage = currentEthernetInterface / 1000000
+                evt.summary = "High Ethernet Interface " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f Mbps)" % (p, Usage)
+                evt.message = evt.summary
+
+            # Kbps utilization
+            elif currentEthernetInterface > 1000:
+                Usage = currentEthernetInterface / 1000
+                evt.summary = "High Ethernet Interface " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f Kbps)" % (p, Usage)
+                evt.message = evt.summary
+
+            # bps  utilization
+            elif currentEthernetInterface < 1000:
+                Usage = currentEthernetInterface
+                evt.summary = "High Ethernet Interface " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f bps)" % (p, Usage)
+                evt.message = evt.summary
+
+fs_id = device.prepId(evt.component)
+for f in device.os.interfaces():
+    if f.id != fs_id: continue
+
+    regex = re.search('threshold of .*(utilization).* (exceeded|restored|not met): current value ([\d\.]+)', evt.message, re.I)
+    if regex and device and device.getDeviceClassPath().startswith("/Storage/Brocade"):
+        EthernetInterface= re.search("current value ([\d\.]+)", evt.summary)
+        if EthernetInterface:
+            currentEthernetInterface = float(EthernetInterface.group(1)) * 8
+            evtKey = evt.eventKey
+            if f.speed == 0: continue
+            p = (currentEthernetInterface / f.speed) * 100
+            if "ifInOctets_ifInOctets|high utilization" in evtKey:
+               evtNewKey = "Input"
+            elif "ifHCInOctets_ifHCInOctets|high utilization" in evtKey:
+               evtNewKey = "Input"
+            elif "ifOutOctets_ifOutOctets|high utilization" in evtKey:
+                evtNewKey = "Output"
+            elif "ifHCOutOctets_ifHCOutOctets|high utilization" in evtKey:
+                evtNewKey = "Output"
+            else:
+                evtNewKey = "Unknown"
+            # Check the speed to determine the appropriate conversion
+            # Gbps utilization
+            if currentEthernetInterface > 1000000000:
+                Usage = currentEthernetInterface / 1000000000
+                evt.summary = "High Fiber Interface " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f Gbps)" % (p, Usage)
+                evt.message = evt.summary
+
+            # Mbps utilization
+            elif currentEthernetInterface > 1000000:
+                Usage = currentEthernetInterface / 1000000
+                evt.summary = "High Fiber Interface " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f Mbps)" % (p, Usage)
+                evt.message = evt.summary
+
+            # Kbps utilization
+            elif currentEthernetInterface > 1000:
+                Usage = currentEthernetInterface / 1000
+                evt.summary = "High Fiber Interface " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f Kbps)" % (p, Usage)
+                evt.message = evt.summary
+
+            # bps  utilization
+            elif currentEthernetInterface < 1000:
+                Usage = currentEthernetInterface
+                evt.summary = "High Fiber Interface " + evtNewKey + " Utilization: Currently %3.2f%% used (%3.2f bps)" % (p, Usage)
+                evt.message = evt.summary
